@@ -11,28 +11,19 @@ public class PlanetInfoPanel extends JPanel{
      *
      */
     private static final long serialVersionUID = 1L;
-    int xLocation = 0; // %
-    int yLocation = 75; //%
-    int infoWidth = 100; //%
-    int infoHeight = 25; //%
-    int infoPanelWidth;
-    int infoPanelHeight;
-
-    int frameWidth;
-    int frameHeight;
+    int xLocationInPercent = 0;
+    int yLocationInPercent = 75;
+    int infoWidthInPercent = 58;
+    int infoHeightInPercent = 25;
 
     Planet selectedPlanet;
-
     public PlanetInfoPanel(int width, int height) {
         setOpaque(true);
         setBackground(Color.blue);
 
-        this.frameHeight = height;
-        this.frameWidth = width;
-        this.infoPanelHeight = (infoHeight* frameHeight)/100;
-        this.infoPanelWidth = (infoWidth * frameWidth)/100;
-        setBounds(frameWidth * xLocation/100, frameHeight * yLocation/100, this.infoPanelWidth, this.infoPanelHeight);
-        System.out.println(getBounds());
+        int infoPanelHeight = (infoHeightInPercent* height)/100;
+        int infoPanelWidth = (infoWidthInPercent * width)/100;
+        setBounds(width * xLocationInPercent/100, height * yLocationInPercent/100, infoPanelWidth, infoPanelHeight);
         setVisible(false);
     }
 
@@ -48,22 +39,21 @@ public class PlanetInfoPanel extends JPanel{
 
     @Override
     protected void paintComponent(Graphics g) {
-        // TODO Auto-generated method stub
         super.paintComponent(g);
         g.setColor(Color.black);
         g.fillRect(10, 10, 500, 150);
 
         if(selectedPlanet == null) { return; }
 
-        g.setColor(new Color(selectedPlanet.planetColour[0], selectedPlanet.planetColour[1], selectedPlanet.planetColour[2]));
-        g.fillArc(15, 85 - selectedPlanet.radius, selectedPlanet.radius * 2, selectedPlanet.radius * 2, 0, 360);
+        g.setColor(selectedPlanet.getPlanetColour());
+        g.fillArc(15, 85 - selectedPlanet.getRadius(), selectedPlanet.getRadius() * 2, selectedPlanet.getRadius() * 2, 0, 360);
 
-        int moonXPos = selectedPlanet.radius * 3;
-        int[] moonInfo = selectedPlanet.getMoons();
+        int moonXPosition = selectedPlanet.getRadius() * 3;
+        int[] moonRadiusInfo = selectedPlanet.getMoons();
         g.setColor(Color.decode("#C0C0C0"));
-        for(int moonRadius: moonInfo) {
-            g.fillArc(moonXPos, 85 - moonRadius, moonRadius * 2, moonRadius * 2, 0, 360);
-            moonXPos += (moonRadius * 2) + 10;
+        for(int moonRadius: moonRadiusInfo) {
+            g.fillArc(moonXPosition, 85 - moonRadius, moonRadius * 2, moonRadius * 2, 0, 360);
+            moonXPosition += (moonRadius * 2) + 10;
         }
     }
 }

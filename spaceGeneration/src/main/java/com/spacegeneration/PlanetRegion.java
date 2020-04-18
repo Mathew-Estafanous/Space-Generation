@@ -1,7 +1,7 @@
 package com.spacegeneration;
 
 import java.util.Random;
-
+import java.awt.Color;
 public class PlanetRegion {
 
     int maxPlanets = 20;
@@ -32,20 +32,20 @@ public class PlanetRegion {
         createStars();
     }
 
-    void createPlanets() {
+    private void createPlanets() {
         planetObj = new Planet[this.totalPlanets];
         for(int i = 0; i < totalPlanets; i++) {
             int radius = seed.nextInt(40) + 10;
             int xCoordinate = seed.nextInt(spaceWidth - 2 * radius) + (xLocation * spaceWidth);
             int yCoordinate = seed.nextInt(spaceHeight - 2 * radius) + (yLocation * spaceHeight);
-            int[] planetColour = { seed.nextInt(255), seed.nextInt(255), seed.nextInt(255) };
+            Color planetColour = new Color(seed.nextInt(255), seed.nextInt(255), seed.nextInt(255));
             int planetSeed = seed.nextInt(100000);
             Planet newPlanet = new Planet(xCoordinate, yCoordinate, radius, planetColour, planetSeed);
             planetObj[i] = newPlanet;
         }
     }
 
-    void createStars() {
+    private void createStars() {
         int totalStars = seed.nextInt(900) + 100;
         starLocation = new int[totalStars][];
         for(int s = 0; s < totalStars; s++) {
@@ -68,13 +68,13 @@ public class PlanetRegion {
     public Planet findPlanetByLocation(int selectX, int selectY) {
         Planet selectedPlanet = null;
         for(Planet curPlanet: planetObj) {
-            double distanceFromMouse = distance(curPlanet.xCoord, curPlanet.yCoord, selectX, selectY);
-            if(distanceFromMouse < curPlanet.radius) {
+            double distanceFromMouse = distance(curPlanet.getXCoordinate(), curPlanet.getYCoordinate(), selectX, selectY);
+            if(distanceFromMouse < curPlanet.getRadius()) {
                 if(selectedPlanet == null) {
                     selectedPlanet = curPlanet;
                     continue;
                 }
-                double distanceToSelectedPlanet = distance(selectedPlanet.xCoord, selectedPlanet.yCoord, selectX, selectY);
+                double distanceToSelectedPlanet = distance(selectedPlanet.getXCoordinate(), selectedPlanet.getYCoordinate(), selectX, selectY);
                 if(distanceFromMouse < distanceToSelectedPlanet) {
                     selectedPlanet = curPlanet;
                 }
