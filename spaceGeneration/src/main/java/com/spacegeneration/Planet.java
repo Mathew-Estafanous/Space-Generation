@@ -9,19 +9,21 @@ public class Planet {
     private int planetRadius;
     private Color planetColour;
     private int planetSeed;
+    private PlanetRegion regionPlanetIsLocated;
 
-    public Planet(int xVal, int yVal, int radius, Color colour, int seed) {
+    public Planet(int xVal, int yVal, int radius, Color colour, int seed, PlanetRegion region) {
         this.xCoordinate = xVal;
         this.yCoordinate = yVal;
         this.planetRadius = radius;
         this.planetColour = colour;
         this.planetSeed = seed;
+        this.regionPlanetIsLocated = region;
     }
 
     public int[] getMoons(){
         Random seed = new Random(planetSeed);
-        int val = seed.nextInt(10);
-        int totalMoons = (this.planetRadius * val) / 50;
+        int moonValue = seed.nextInt(9);
+        int totalMoons = (this.planetRadius * moonValue) / this.regionPlanetIsLocated.getMaxPlanetRadius();
         int[] moonInfo = new int[totalMoons];
         for(int i = 0; i < totalMoons; i++) {
             int radius = seed.nextInt(this.planetRadius / 2) + 5;

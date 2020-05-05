@@ -14,6 +14,7 @@ import javax.swing.event.MouseInputListener;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Random;
 
 public class EnviroPanel extends JPanel implements KeyListener, MouseInputListener {
 
@@ -22,6 +23,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
      */
     private static final long serialVersionUID = 1L;
     SpaceFrame mainFrame;
+    Random universeSeedGenerator;
     int enviroHeight;
     int enviroWidth;
 
@@ -52,8 +54,8 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
 
         PlanetRegion initialRegion = new PlanetRegion(createSeed(), 0, 0, enviroHeight, enviroWidth);
         spaceRegions.add(initialRegion);
-        String locationCoord = putIntegersTogetherAsString(initialRegion.xLocation, initialRegion.yLocation);
-        allRegions.put(locationCoord, initialRegion.regionSeed);
+        String locationCoord = putIntegersTogetherAsString(initialRegion.getXRegion(), initialRegion.getYRegion());
+        allRegions.put(locationCoord, initialRegion.getRegionSeed());
 
         updateCenterRegion();
         updateRegionsToLoad();
@@ -87,11 +89,11 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         int endYRegion = Math.floorDiv(spacePosition[1] + screenHeight, enviroHeight);
         for(int xRegion = startXRegion; xRegion <= endXRegion; xRegion++) {
             for(int yRegion = startYRegion; yRegion <= endYRegion; yRegion++) {
-                String location = putIntegersTogetherAsString(xRegion, yRegion);
-                if(allRegions.get(location) == null) {
-                    allRegions.put(location, createSeed());
+                String regionLocation = putIntegersTogetherAsString(xRegion, yRegion);
+                if(allRegions.get(regionLocation) == null) {
+                    allRegions.put(regionLocation, createSeed());
                 }
-                PlanetRegion regionToAdd = new PlanetRegion(allRegions.get(location), xRegion, yRegion, enviroHeight, enviroWidth);
+                PlanetRegion regionToAdd = new PlanetRegion(allRegions.get(regionLocation), xRegion, yRegion, enviroHeight, enviroWidth);
                 spaceRegions.add(regionToAdd);
             }
         }
@@ -101,7 +103,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         int xRegion = Math.floorDiv(mouseX, enviroWidth);
         int yRegion = Math.floorDiv(mouseY, enviroHeight);
         for(PlanetRegion region: spaceRegions) {
-            if(region.xLocation == xRegion && region.yLocation == yRegion) {
+            if(region.getXRegion() == xRegion && region.getYRegion() == yRegion) {
                 return region;
             }
         }
@@ -120,27 +122,6 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         return Integer.toString(a) + Integer.toString(b);
     }
 
-    private void drawStarsInRegion(PlanetRegion region, Graphics g) {
-        for(int[] starInfo: region.getStars()) {
-            g.setColor(Color.white);
-            int starTransformX = transformToScreenspace(starInfo[0], spacePosition[0]);
-            int starTransformY = transformToScreenspace(starInfo[1], spacePosition[1]);
-            g.fillArc(starTransformX, starTransformY, starInfo[2], starInfo[2], 0, 360);
-        }
-    }
-
-
-
-    private void drawPlanetsInRegion(PlanetRegion region, Graphics g) {
-        for (Planet planet : region.getPlanets()) {
-            Color pColour = planet.getPlanetColour();
-            g.setColor(pColour);
-            int xTransformed = transformToScreenspace(planet.getXCoordinate(), spacePosition[0]);
-            int yTransformed = transformToScreenspace(planet.getYCoordinate(), spacePosition[1]);
-            g.fillArc(xTransformed, yTransformed, planet.getRadius(), planet.getRadius(), 0, 360);
-        }
-    }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -153,12 +134,33 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
             g.setColor(Color.CYAN);
             int xTransform = transformToScreenspace(planetHovering.getXCoordinate(), spacePosition[0]);
             int yTransform = transformToScreenspace(planetHovering.getYCoordinate(), spacePosition[1]);
-            g.drawArc(xTransform - 5, yTransform - 5, planetHovering.getRadius() + 10, planetHovering.getRadius() + 10, 0, 360);
+            g.drawArc(xTransform - 5, yTransform - 5, (planetHovering.getRadius() * 2) + 10, (planetHovering.getRadius() * 2) + 10, 0, 360);
         }
 
         g.setColor(Color.white);
         g.setFont(new Font("TimesRoman", Font.PLAIN, 20));
         g.drawString("(" + Integer.toString(spacePosition[0]) + "," + Integer.toString(spacePosition[1]) + ")", 10, 20);
+    }
+
+    private void drawStarsInRegion(PlanetRegion region, Graphics g) {
+        for(int[] starInfo: region.getStars()) {
+            g.setColor(Color.white);
+            int starTransformX = transformToScreenspace(starInfo[0], spacePosition[0]);
+            int starTransformY = transformToScreenspace(starInfo[1], spacePosition[1]);
+            g.fillArc(starTransformX, starTransformY, starInfo[2], starInfo[2], 0, 360);
+        }
+    }
+
+
+
+    private void drawPlanetsInRegion(PlanetRegion region, Graphics g) {
+        for (Planet planet : region.getListOfPlanets()) {
+            Color pColour = planet.getPlanetColour();
+            g.setColor(pColour);
+            int xTransformed = transformToScreenspace(planet.getXCoordinate(), spacePosition[0]);
+            int yTransformed = transformToScreenspace(planet.getYCoordinate(), spacePosition[1]);
+            g.fillArc(xTransformed, yTransformed, planet.getRadius() * 2, planet.getRadius() * 2, 0, 360);
+        }
     }
 
     @Override
@@ -243,7 +245,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         int mouseX = spacePosition[0] + e.getX();
         int mouseY = spacePosition[1] + e.getY();
         PlanetRegion selectedRegion = getSelectedRegion(mouseX, mouseY);
-        Planet selectedPlanet = selectedRegion.findPlanetByLocation(mouseX, mouseY);
+        Planet selectedPlanet = selectedRegion.findPlanetByLocation(mouseX, mouseY, 0,  selectedRegion.listOfPlanetObject.size() - 1);
         planetHovering = selectedPlanet;
         repaint();
     }
