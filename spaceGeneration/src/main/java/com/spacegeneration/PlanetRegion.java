@@ -1,30 +1,35 @@
 package com.spacegeneration;
 
 import java.util.Random;
+
+import java.util.List;
+import java.util.ArrayList;
 import java.awt.Color;
 public class PlanetRegion {
 
-    int maxPlanets = 20;
-    int minPlanets = 10;
-    int spaceWidth;
-    int spaceHeight;
-    int seedRange = 100000;
+    private int maxPlanets = 20;
+    private int minPlanets = 10;
+    private int maxPlanetRadius = 25;
+    private int minPlanetRadius= 5;
+    private int spaceWidth;
+    private int spaceHeight;
+    private int seedRange = 100000;
 
     Random seed;
-    public int regionSeed;
-    public int totalPlanets;
+    private int regionSeed;
+    private int totalPlanets;
 
-    public int xLocation;
-    public int yLocation;
+    private int xRegion;
+    private int yRegion;
 
-    Planet[] planetObj;
+    List<Planet> listOfPlanetObject = new ArrayList<Planet>();
     int[][] starLocation;
     public PlanetRegion(int seed, int xLoc, int yLoc, int height, int width) {
         this.regionSeed = seed;
         this.totalPlanets = new Random(this.regionSeed).nextInt(maxPlanets) + minPlanets;
         this.seed = new Random(this.regionSeed);
-        this.xLocation = xLoc;
-        this.yLocation = yLoc;
+        this.xRegion = xLoc;
+        this.yRegion = yLoc;
         this.spaceHeight = height;
         this.spaceWidth = width;
 
@@ -33,15 +38,19 @@ public class PlanetRegion {
     }
 
     private void createPlanets() {
-        planetObj = new Planet[this.totalPlanets];
-        for(int i = 0; i < totalPlanets; i++) {
-            int radius = seed.nextInt(40) + 10;
-            int xCoordinate = seed.nextInt(spaceWidth - 2 * radius) + (xLocation * spaceWidth);
-            int yCoordinate = seed.nextInt(spaceHeight - 2 * radius) + (yLocation * spaceHeight);
+        int planetCount = 0;
+        while(planetCount < totalPlanets) {
+            int radius = seed.nextInt(maxPlanetRadius) + minPlanetRadius;
+            int xCoordinate = seed.nextInt(spaceWidth - 2 * radius) + (xRegion * spaceWidth);
+            int yCoordinate = seed.nextInt(spaceHeight - 2 * radius) + (yRegion * spaceHeight);
             Color planetColour = new Color(seed.nextInt(255), seed.nextInt(255), seed.nextInt(255));
-            int planetSeed = seed.nextInt(100000);
-            Planet newPlanet = new Planet(xCoordinate, yCoordinate, radius, planetColour, planetSeed);
-            planetObj[i] = newPlanet;
+            int planetSeed = seed.nextInt(seedRange);
+            Planet newPlanet = new Planet(xCoordinate, yCoordinate, radius, planetColour, planetSeed, this);
+
+            if(isPlanetOverlappingAnother(newPlanet, 0, listOfPlanetObject.size() - 1)) { continue; }
+
+            addPlanetToSortedxCoordinateList(newPlanet);
+            planetCount++;
         }
     }
 
@@ -50,43 +59,95 @@ public class PlanetRegion {
         starLocation = new int[totalStars][];
         for(int s = 0; s < totalStars; s++) {
             int starRadius = seed.nextInt(4) + 1;
-            int starX = seed.nextInt(spaceWidth - 2 * starRadius) + (xLocation * spaceWidth);
-            int starY = seed.nextInt(spaceHeight - 2 * starRadius) + (yLocation * spaceHeight);
+            int starX = seed.nextInt(spaceWidth - 2 * starRadius) + (xRegion * spaceWidth);
+            int starY = seed.nextInt(spaceHeight - 2 * starRadius) + (yRegion * spaceHeight);
             int[] starInfo = {starX, starY, starRadius};
             starLocation[s] = starInfo;
         }
+    }
+
+    private void addPlanetToSortedxCoordinateList(Planet planet) {
+        if(listOfPlanetObject.size() == 0) {
+            listOfPlanetObject.add(planet);
+        }
+
+        int planetListLength = listOfPlanetObject.size();
+        for(int index = 0; index < planetListLength; index++) {
+            if(listOfPlanetObject.get(index).getXCoordinate() > planet.getXCoordinate()) {
+                listOfPlanetObject.add(index, planet);
+                return;
+            }
+        }
+        listOfPlanetObject.add(planet);
+    }
+
+    private boolean isPlanetOverlappingAnother(Planet planetToCheck, int min, int max) {
+        if(listOfPlanetObject.size() == 0) { return false; }
+
+        int midIndex = (min + max) / 2;
+        Planet midPlanet = listOfPlanetObject.get(midIndex);
+        int midPlanetX = offSetPlanetCoordinateByRadius(midPlanet, 0);
+        int midPlanetY = offSetPlanetCoordinateByRadius(midPlanet, 1);
+        int planetToCheckX = offSetPlanetCoordinateByRadius(planetToCheck, 0);
+        int planetToCheckY = offSetPlanetCoordinateByRadius(planetToCheck, 1);
+        double distanceBetweenPlanets = calculateDistanceOfTwoObjects(midPlanetX, midPlanetY, planetToCheckX, planetToCheckY);
+        if(distanceBetweenPlanets < midPlanet.getRadius() * 2|| distanceBetweenPlanets < planetToCheck.getRadius() * 2) {
+            return true;
+        } else if(max - min == 0) {
+            return false;
+        } else if(planetToCheck.getXCoordinate() > midPlanet.getXCoordinate()) {
+            return isPlanetOverlappingAnother(planetToCheck, midIndex + 1, max);
+        } else {
+            return isPlanetOverlappingAnother(planetToCheck, min, midIndex );
+        }
+    }
+
+    public Planet findPlanetByLocation(int selectX, int selectY, int min, int max) {
+        for(int j = 0; j < listOfPlanetObject.size(); j++) {
+            Planet jPlanet = listOfPlanetObject.get(j);
+            int planetXCoord = offSetPlanetCoordinateByRadius(jPlanet, 0);
+            int planetyCoord = offSetPlanetCoordinateByRadius(jPlanet, 1);
+            double distanceBetweenTwoPoints = calculateDistanceOfTwoObjects(planetXCoord, planetyCoord, selectX, selectY);
+            if(distanceBetweenTwoPoints < jPlanet.getRadius()) {
+                return jPlanet;
+            }
+            if(planetXCoord > selectX) { break; }
+        }
+        return null;
+    }
+
+    private int offSetPlanetCoordinateByRadius(Planet planet, int whichCoordinateDirection) {
+        int originalCoordinate = (whichCoordinateDirection == 0)? planet.getXCoordinate():planet.getYCoordinate();
+        return originalCoordinate + planet.getRadius();
+    }
+    private double calculateDistanceOfTwoObjects(int x1, int y1, int x2, int y2) {
+        double xDistance = x2 - x1;
+        double yDistance = y2 - y1;
+        double totalDistance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+        return totalDistance;
     }
 
     public int[][] getStars() {
         return starLocation;
     }
 
-    public Planet[] getPlanets() {
-        return planetObj;
+    public List<Planet> getListOfPlanets() {
+        return listOfPlanetObject;
     }
 
-    public Planet findPlanetByLocation(int selectX, int selectY) {
-        Planet selectedPlanet = null;
-        for(Planet curPlanet: planetObj) {
-            double distanceFromMouse = distance(curPlanet.getXCoordinate(), curPlanet.getYCoordinate(), selectX, selectY);
-            if(distanceFromMouse < curPlanet.getRadius()) {
-                if(selectedPlanet == null) {
-                    selectedPlanet = curPlanet;
-                    continue;
-                }
-                double distanceToSelectedPlanet = distance(selectedPlanet.getXCoordinate(), selectedPlanet.getYCoordinate(), selectX, selectY);
-                if(distanceFromMouse < distanceToSelectedPlanet) {
-                    selectedPlanet = curPlanet;
-                }
-            }
-        }
-        return selectedPlanet;
+    public int getMaxPlanetRadius() {
+        return maxPlanetRadius;
     }
 
-    public double distance(int x1, int y1, int x2, int y2) {
-        double xDistance = x2 - x1;
-        double yDistance = y2 - y1;
-        double totalDistance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
-        return totalDistance;
+    public int getRegionSeed() {
+        return regionSeed;
+    }
+
+    public int getXRegion() {
+        return xRegion;
+    }
+
+    public int getYRegion() {
+        return yRegion;
     }
 }
