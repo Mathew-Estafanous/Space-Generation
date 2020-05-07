@@ -36,7 +36,9 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     Hashtable<String, Integer> allRegions = new Hashtable<String, Integer>();
     List<PlanetRegion> spaceRegions = new ArrayList<PlanetRegion>();
     PlanetRegion centerRegion = null;
+
     Planet planetHovering;
+    boolean isSimulatingOrbits = false;
 
     public EnviroPanel(SpaceFrame mainFrame, int height, int width) {
         setOpaque(true);
@@ -151,8 +153,6 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         }
     }
 
-
-
     private void drawPlanetsInRegion(PlanetRegion region, Graphics g) {
         for (Planet planet : region.getListOfPlanets()) {
             Color pColour = planet.getPlanetColour();
@@ -163,14 +163,14 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         }
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {
-        // TODO Auto-generated method stub
-
+    public void setIsSimulatingBoolean(boolean change) {
+        isSimulatingOrbits = change;
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if(isSimulatingOrbits) { return; }
+
         char currentKey = e.getKeyChar();
         switch(currentKey) {
             case 'w':
@@ -193,51 +193,14 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public void mouseClicked(MouseEvent e) {
         if(SwingUtilities.isLeftMouseButton(e)) {
-            PlanetInfoPanel infoPanel = mainFrame.getInfoPanel();
-            if(planetHovering == null) {
-                infoPanel.closePlanetInfo();
-            } else {
-                infoPanel.openPlanetInfo(planetHovering);
+            OrbitSimulationPanel orbitSimulation = mainFrame.getOrbitSimulationPanel();
+            if(planetHovering != null && !isSimulatingOrbits) {
+                orbitSimulation.openSimulation(planetHovering);
+                isSimulatingOrbits = true;
             }
         }
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -249,4 +212,25 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         planetHovering = selectedPlanet;
         repaint();
     }
+
+    @Override
+    public void keyTyped(KeyEvent e) { }
+
+    @Override
+    public void keyReleased(KeyEvent e) { }
+
+    @Override
+    public void mousePressed(MouseEvent e) { }
+
+    @Override
+    public void mouseReleased(MouseEvent e) { }
+
+    @Override
+    public void mouseEntered(MouseEvent e) { }
+
+    @Override
+    public void mouseExited(MouseEvent e) { }
+
+    @Override
+    public void mouseDragged(MouseEvent e) { }
 }
