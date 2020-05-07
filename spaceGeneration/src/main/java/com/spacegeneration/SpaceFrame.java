@@ -18,7 +18,6 @@ public class SpaceFrame extends JFrame implements ComponentListener {
     JLayeredPane layeredPane;
     EnviroPanel enviroPanel;
     PlanetInfoPanel infoPanel;
-    OrbitSimulationPanel simulationPanel;
 
     public SpaceFrame() {
         super("Space Procedural Generation");
@@ -30,11 +29,8 @@ public class SpaceFrame extends JFrame implements ComponentListener {
         layeredPane = new JLayeredPane();
         enviroPanel = new EnviroPanel(this, frameHeight, frameWidth);
         infoPanel = new PlanetInfoPanel(frameWidth, frameHeight);
-        simulationPanel = new OrbitSimulationPanel(frameWidth, frameHeight, this);
-
         layeredPane.add(enviroPanel, JLayeredPane.DEFAULT_LAYER);
         layeredPane.add(infoPanel, JLayeredPane.POPUP_LAYER);
-        layeredPane.add(simulationPanel, JLayeredPane.POPUP_LAYER);
 
         addComponentListener(this);
         add(layeredPane);
@@ -44,20 +40,11 @@ public class SpaceFrame extends JFrame implements ComponentListener {
         return infoPanel;
     }
 
-    public OrbitSimulationPanel getOrbitSimulationPanel() {
-        return simulationPanel;
-    }
-
-    public EnviroPanel getEnviroPanel() {
-        return enviroPanel;
-    }
-
     @Override
     public void componentResized(ComponentEvent e) {
         this.frameHeight = getHeight();
         this.frameWidth = getWidth();
         enviroPanel.updateVisibleSpaceSize(this.frameWidth, this.frameHeight);
-        simulationPanel.updateSize(this.frameWidth, this.frameHeight);
     }
 
     @Override
