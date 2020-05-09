@@ -33,12 +33,12 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     int maxPlanets = 20;
     int minPlanets = 10;
 
-    Hashtable<String, Integer> allRegions = new Hashtable<String, Integer>();
-    List<PlanetRegion> spaceRegions = new ArrayList<PlanetRegion>();
+    Hashtable<String, Integer> allSpaceRegions = new Hashtable<String, Integer>();
+    List<PlanetRegion> spaceRegionsToLoad = new ArrayList<PlanetRegion>();
     PlanetRegion centerRegion = null;
 
     Planet planetHovering;
-    boolean isSimulatingOrbits = false;
+    boolean isSimulatingPlanet = false;
 
     public EnviroPanel(SpaceFrame mainFrame, int height, int width) {
         setOpaque(true);
@@ -54,10 +54,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         this.enviroHeight = height;
         this.enviroWidth = width;
 
-        PlanetRegion initialRegion = new PlanetRegion(createSeed(), 0, 0, enviroHeight, enviroWidth);
-        spaceRegions.add(initialRegion);
-        String locationCoord = putIntegersTogetherAsString(initialRegion.getXRegion(), initialRegion.getYRegion());
-        allRegions.put(locationCoord, initialRegion.getRegionSeed());
+        createInitialRegion();
 
         updateCenterRegion();
         updateRegionsToLoad();
@@ -66,6 +63,13 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     public void updateVisibleSpaceSize(int width, int height) {
         setBounds(0, 0, width, height);
         repaint();
+    }
+
+    private void createInitialRegion() {
+        PlanetRegion initialRegion = new PlanetRegion(createSeed(), 0, 0, enviroHeight, enviroWidth);
+        spaceRegionsToLoad.add(initialRegion);
+        String locationCoord = putIntegersTogetherAsString(initialRegion.getXRegion(), initialRegion.getYRegion());
+        allSpaceRegions.put(locationCoord, initialRegion.getRegionSeed());
     }
 
     private void updateCenterRegion() {
@@ -81,7 +85,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     }
 
     private void updateRegionsToLoad() {
-        spaceRegions.clear();
+        spaceRegionsToLoad.clear();
         int screenWidth = mainFrame.getWidth();
         int screenHeight = mainFrame.getHeight();
 
@@ -92,19 +96,19 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         for(int xRegion = startXRegion; xRegion <= endXRegion; xRegion++) {
             for(int yRegion = startYRegion; yRegion <= endYRegion; yRegion++) {
                 String regionLocation = putIntegersTogetherAsString(xRegion, yRegion);
-                if(allRegions.get(regionLocation) == null) {
-                    allRegions.put(regionLocation, createSeed());
+                if(allSpaceRegions.get(regionLocation) == null) {
+                    allSpaceRegions.put(regionLocation, createSeed());
                 }
-                PlanetRegion regionToAdd = new PlanetRegion(allRegions.get(regionLocation), xRegion, yRegion, enviroHeight, enviroWidth);
-                spaceRegions.add(regionToAdd);
+                PlanetRegion regionToAdd = new PlanetRegion(allSpaceRegions.get(regionLocation), xRegion, yRegion, enviroHeight, enviroWidth);
+                spaceRegionsToLoad.add(regionToAdd);
             }
         }
     }
 
-    private PlanetRegion getSelectedRegion(int mouseX, int mouseY) {
+    private PlanetRegion findPlanetRegionFromCoordinates(int mouseX, int mouseY) {
         int xRegion = Math.floorDiv(mouseX, enviroWidth);
         int yRegion = Math.floorDiv(mouseY, enviroHeight);
-        for(PlanetRegion region: spaceRegions) {
+        for(PlanetRegion region: spaceRegionsToLoad) {
             if(region.getXRegion() == xRegion && region.getYRegion() == yRegion) {
                 return region;
             }
@@ -127,21 +131,25 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        for (PlanetRegion region : spaceRegions) {
+        for (PlanetRegion region : spaceRegionsToLoad) {
             drawStarsInRegion(region, g);
             drawPlanetsInRegion(region, g);
         }
 
         if(planetHovering != null) {
-            g.setColor(Color.CYAN);
-            int xTransform = transformToScreenspace(planetHovering.getXCoordinate(), spacePosition[0]);
-            int yTransform = transformToScreenspace(planetHovering.getYCoordinate(), spacePosition[1]);
-            g.drawArc(xTransform - 5, yTransform - 5, (planetHovering.getRadius() * 2) + 10, (planetHovering.getRadius() * 2) + 10, 0, 360);
+           drawHoveringOutline(g);
         }
 
         g.setColor(Color.white);
         g.setFont(new Font("TimesRoman", Font.PLAIN, 20));
         g.drawString("(" + Integer.toString(spacePosition[0]) + "," + Integer.toString(spacePosition[1]) + ")", 10, 20);
+    }
+
+    private void drawHoveringOutline(Graphics g) {
+        g.setColor(Color.CYAN);
+        int xTransform = transformToScreenspace(planetHovering.getXCoordinate(), spacePosition[0]);
+        int yTransform = transformToScreenspace(planetHovering.getYCoordinate(), spacePosition[1]);
+        g.drawArc(xTransform - 5, yTransform - 5, (planetHovering.getRadius() * 2) + 10, (planetHovering.getRadius() * 2) + 10, 0, 360);
     }
 
     private void drawStarsInRegion(PlanetRegion region, Graphics g) {
@@ -164,12 +172,12 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     }
 
     public void setIsSimulatingBoolean(boolean change) {
-        isSimulatingOrbits = change;
+        isSimulatingPlanet = change;
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if(isSimulatingOrbits) { return; }
+        if(isSimulatingPlanet) { return; }
 
         char currentKey = e.getKeyChar();
         switch(currentKey) {
@@ -196,9 +204,9 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     public void mouseClicked(MouseEvent e) {
         if(SwingUtilities.isLeftMouseButton(e)) {
             OrbitSimulationPanel orbitSimulation = mainFrame.getOrbitSimulationPanel();
-            if(planetHovering != null && !isSimulatingOrbits) {
+            if(planetHovering != null && !isSimulatingPlanet) {
                 orbitSimulation.openSimulation(planetHovering);
-                isSimulatingOrbits = true;
+                isSimulatingPlanet = true;
             }
         }
     }
@@ -207,8 +215,8 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     public void mouseMoved(MouseEvent e) {
         int mouseX = spacePosition[0] + e.getX();
         int mouseY = spacePosition[1] + e.getY();
-        PlanetRegion selectedRegion = getSelectedRegion(mouseX, mouseY);
-        Planet selectedPlanet = selectedRegion.findPlanetByLocation(mouseX, mouseY, 0,  selectedRegion.listOfPlanetObject.size() - 1);
+        PlanetRegion selectedRegion = findPlanetRegionFromCoordinates(mouseX, mouseY);
+        Planet selectedPlanet = selectedRegion.findPlanetByLocation(mouseX, mouseY);
         planetHovering = selectedPlanet;
         repaint();
     }

@@ -102,7 +102,7 @@ public class PlanetRegion {
         }
     }
 
-    public Planet findPlanetByLocation(int selectX, int selectY, int min, int max) {
+    public Planet findPlanetByLocation(int selectX, int selectY) {
         for(int j = 0; j < listOfPlanetObject.size(); j++) {
             Planet jPlanet = listOfPlanetObject.get(j);
             int planetXCoord = offSetPlanetCoordinateByRadius(jPlanet, 0);
