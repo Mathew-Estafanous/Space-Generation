@@ -76,6 +76,7 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         timer.restart();
         moonInformation.clear();
         mainFrame.getEnviroPanel().setIsSimulatingBoolean(false);
+        mainFrame.getEnviroPanel().requestFocus();
         setVisible(false);
     }
 
@@ -130,7 +131,7 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         moveCenterPlanet();
 
         int orbitLevel = 1;
-        List<double[]> updatedListInformation = new ArrayList<double[]>();
+        List<double[]> updatedMoonInformation = new ArrayList<double[]>();
         for (double[] moonInfo : moonInformation) {
             double radius = moonInfo[0];
             double orbitVelocity = (calculateOrbitSpeedUsingOrbitLevel(orbitLevel) / (100 / delay)) * simulationMultiplier;
@@ -139,10 +140,10 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
             double newXPosition = transformToCenter(Math.cos(newRadiant) * hypotenius, 0);
             double newYposition = transformToCenter(Math.sin(newRadiant) * hypotenius, 1);
             double[] moonData = new double[] { radius, newXPosition, newYposition, newRadiant };
-            updatedListInformation.add(moonData);
+            updatedMoonInformation.add(moonData);
             orbitLevel++;
         }
-        moonInformation = updatedListInformation;
+        moonInformation = updatedMoonInformation;
     }
 
     private double calculateVolume(double radius) {
@@ -218,7 +219,7 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
             repaint();
         }
 
-        if (action == "Leave Simulation") {
+        if (action == exitButton.getText()){
             closeSimulation();
         }
     }
@@ -232,9 +233,7 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         } else {
             isHoveringOverPlanet = false;
         }
-
     }
-
 
     @Override
     public void stateChanged(ChangeEvent e) {
@@ -242,7 +241,13 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) { }
+    public void mouseClicked(MouseEvent e) {
+        if(isHoveringOverPlanet) {
+            mainFrame.getLandSimulation().openLandSimulation(currentPlanet.getPlanetSeed());
+            mainFrame.getLandSimulation().requestFocus();
+            setVisible(false);
+        }
+     }
 
     @Override
     public void mousePressed(MouseEvent e) {}
