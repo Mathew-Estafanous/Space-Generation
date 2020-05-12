@@ -2,6 +2,12 @@ package com.spacegeneration;
 
 import java.util.Random;
 import java.awt.Color;
+
+/**
+ * General object class that is used to store information about a certain planet.
+ * This Planet object is located as an object under the PlanetRegion class. All planets
+ * are part of a planet which largly decides the planet number, size, etc.
+ */
 public class Planet {
 
     private int xCoordinate;

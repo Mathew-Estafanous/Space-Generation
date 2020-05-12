@@ -6,7 +6,7 @@ package com.spacegeneration;
  * is designed for noise generation.
  * Github Library: https://github.com/Auburns/FastNoise_Java
  * This library is available to be used by anyone and I am not taking any credit for any
- * of the work that is done in this. It is
+ * of the work that is done in this.
  */
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;

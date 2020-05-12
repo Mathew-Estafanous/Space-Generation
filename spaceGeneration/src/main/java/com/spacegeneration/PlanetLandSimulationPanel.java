@@ -22,6 +22,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+/**
+ * This panel is used to simulate the land that the planet has. Uses an opensorce library called
+ * FastNoise to create the perlin noise that is used to determin the different landforms that
+ * will be displayed for the user.
+ * A JSON file contating different land colour palettes are used to determin the land types.
+ */
 public class PlanetLandSimulationPanel extends JPanel implements KeyListener, ActionListener {
     private static final long serialVersionUID = 1L;
 
@@ -71,7 +77,7 @@ public class PlanetLandSimulationPanel extends JPanel implements KeyListener, Ac
         seedGenerator = new Random(seed);
 
         setVisible(true);
-        createInitialPerlinNoise();
+        createPerlinNoise();
         parseJSONLayerData();
         repaint();
     }
@@ -86,35 +92,42 @@ public class PlanetLandSimulationPanel extends JPanel implements KeyListener, Ac
         this.landWidth = width;
         this.landHeight = height;
         setBounds(0, 0, width, height);
-        createInitialPerlinNoise();
+        createPerlinNoise();
     }
 
-    private void createInitialPerlinNoise() {
+    private void createPerlinNoise() {
         noiseGenerator = new FastNoise(landSeed);
         noiseLand = new float[landWidth][landHeight];
         for (int x = 0; x < landWidth; x++) {
             for (int y = 0; y < landHeight; y++) {
                 noiseLand[x][y] = noiseGenerator.GetPerlin(x, y);
-                if(noiseLand[x][y] < minimumValue) {
-                    minimumValue = noiseLand[x][y];
-                } else if(noiseLand[x][y] > maximumValue) {
-                    maximumValue = noiseLand[x][y];
-                }
+                updateRangeValues(x, y);
             }
         }
         perlinRange = maximumValue - minimumValue;
     }
 
+    private void updateRangeValues(int x, int y) {
+        minimumValue = (noiseLand[x][y] < minimumValue)? noiseLand[x][y]:minimumValue;
+        maximumValue = (noiseLand[x][y] > maximumValue)? noiseLand[x][y]:maximumValue;
+    }
+
+    /**
+     * Retrieves the JSON file that is located in the resources folder and then parses
+     * the information in the file depending on the chosen landType. Once the landType
+     * has been chosen, the values for each layer and color are then stored in local
+     * variables landLayerValues, landLayerColors.
+     */
     private void parseJSONLayerData() {
         try {
             InputStream in = this.getClass().getResourceAsStream("/landLayerData.json");
             InputStreamReader reader = new InputStreamReader(in);
             Object jsonObj = jsonParser.parse(reader);
             JSONArray landTypeList = (JSONArray) jsonObj;
-            landType = seedGenerator.nextInt(landTypeList.size() - 1);
-            JSONObject landTypeData = (JSONObject) landTypeList.get(landType);
+            landType = seedGenerator.nextInt(landTypeList.size());
+            JSONObject chosenLandTypeData = (JSONObject) landTypeList.get(landType);
 
-            JSONObject landLayerData = (JSONObject) landTypeData.get("landTypeInformation");
+            JSONObject landLayerData = (JSONObject) chosenLandTypeData.get("landTypeInformation");
             ObjectMapper objectMapper = new ObjectMapper();
             landLayerValues = objectMapper.readValue(landLayerData.get("layerValues").toString(), double[].class);
             landLayerColors = objectMapper.readValue(landLayerData.get("landColors").toString(), String[].class);
@@ -127,11 +140,9 @@ public class PlanetLandSimulationPanel extends JPanel implements KeyListener, Ac
         }
     }
 
-    private double convertLayerValuesToPerlinRangeValues(double[] landLayerValues, int layer) {
-        double layerValue = landLayerValues[layer];
+    private double convertLayerValuesToPerlinRangeValues(double layerValue) {
         return minimumValue + (perlinRange * layerValue);
     }
-
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -139,14 +150,18 @@ public class PlanetLandSimulationPanel extends JPanel implements KeyListener, Ac
 
         for (int x = 0; x < landWidth; x++) {
             for (int y = 0; y < landHeight; y++) {
-                for(int layer = 0; layer < landLayerValues.length;layer++) {
-                    if(noiseLand[x][y] <= convertLayerValuesToPerlinRangeValues(landLayerValues, layer)) {
-                        g.setColor(Color.decode(landLayerColors[layer]));
-                        g.fillRect(x, y, 1, 1);
-                        break;
-                    }
-                }
+                paintLandPixle(x, y, g);
             }
+        }
+    }
+
+    private void paintLandPixle(int x, int y, Graphics g) {
+        for(int layer = 0; layer < landLayerValues.length;layer++) {
+            if(noiseLand[x][y] > convertLayerValuesToPerlinRangeValues(landLayerValues[layer])) { continue; }
+
+            g.setColor(Color.decode(landLayerColors[layer]));
+            g.fillRect(x, y, 1, 1);
+            break;
         }
     }
 
