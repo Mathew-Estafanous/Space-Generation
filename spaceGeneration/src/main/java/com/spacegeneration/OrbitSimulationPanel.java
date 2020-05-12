@@ -19,6 +19,11 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 
+/**
+ * This panel is largely involved in simulating the orbits of moons for the
+ * selected planet. The user is able to speed up orbits and watch how different planets
+ * have faster/smaller/larger moons than others.
+ */
 public class OrbitSimulationPanel extends JPanel implements ActionListener, ChangeListener, MouseInputListener {
 
     private static final long serialVersionUID = 1L;
@@ -27,25 +32,29 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
     final double DENSITY_OF_OBJECTS = 2000; // kg/m^2
     final int ORBIT_SEPARATION = 50;
 
-    SpaceFrame mainFrame;
-    int panelWidth;
-    int panelHeight;
+    private SpaceFrame mainFrame;
+    private int panelWidth;
+    private int panelHeight;
 
-    int delay = 10;
-    Timer timer;
-    int minimumMultiplier = 0;
-    int maximumMultiplier = 10;
-    int simulationMultiplier = 1;
+    private int delay = 10;
+    private Timer timer;
+    private int minimumMultiplier = 0;
+    private int maximumMultiplier = 10;
+    private int simulationMultiplier = 1;
 
-    Planet currentPlanet;
-    boolean isHoveringOverPlanet = false;
-    double orbitalVelocity;
-    int planetX;
-    int planetY;
-    List<double[]> moonInformation = new ArrayList<double[]>(); // ..[radius, x, y, orbitRadiant]
+    private Planet currentPlanet;
+    private int planetX;
+    private int planetY;
+    private boolean isHoveringOverPlanet = false;
+    private double orbitalVelocity;
+    private List<double[]> moonInformation = new ArrayList<double[]>(); // ..[radius, x, y, orbitRadiant]
 
-    JSlider multiplierSlider;
-    JButton exitButton;
+    private JSlider multiplierSlider;
+    private JButton exitButton;
+
+    enum CoordinateDirection {
+        x,y
+    }
 
     public OrbitSimulationPanel(int width, int height, SpaceFrame main) {
         setOpaque(true);
@@ -67,7 +76,9 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         currentPlanet = planetToSimulate;
 
         timer.start();
-        instantiateAllObjects();
+        instantiateAllMoonsInOrbit();
+        calculateMinimumOrbitVelocity();
+        moveCenterPlanet();
         setVisible(true);
     }
 
@@ -84,6 +95,9 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         this.panelWidth = width;
         this.panelHeight = height;
         setBounds(0, 0, width, height);
+        if(currentPlanet != null) {
+            moveCenterPlanet();
+        }
     }
 
     private void moveCenterPlanet() {
@@ -91,18 +105,23 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         planetY = panelHeight / 2 - currentPlanet.getRadius();
     }
 
-    private void instantiateAllObjects() {
-        moveCenterPlanet();
-
+    private void calculateMinimumOrbitVelocity() {
         double mass = calculateVolume(currentPlanet.getRadius()) * DENSITY_OF_OBJECTS;
         orbitalVelocity = Math.sqrt((mass * G_CONSTANT) / currentPlanet.getRadius());
+    }
 
+    /**
+     * Get information about the moons and then instantiate them in their assigned orbits.
+     * Their starting location is randomly chosen between (0 rad - PI rad).
+     * All the instantiated moons are then saved onto the moonInformation list.
+     */
+    private void instantiateAllMoonsInOrbit() {
         int orbitLevel = 1;
         for (int radius : currentPlanet.getMoons()) {
             double startingRadiant = Math.random() * Math.PI;
             double hypotenius = (orbitLevel * ORBIT_SEPARATION) + currentPlanet.getRadius();
-            double startingX = transformToCenter(Math.cos(startingRadiant) * hypotenius, 0);
-            double startingY = transformToCenter(Math.sin(startingRadiant) * hypotenius, 1);
+            double startingX = transformToCenter(Math.cos(startingRadiant) * hypotenius, CoordinateDirection.x);
+            double startingY = transformToCenter(Math.sin(startingRadiant) * hypotenius, CoordinateDirection.y);
             double[] moonData = new double[] { radius, startingX, startingY, startingRadiant };
             moonInformation.add(moonData);
             orbitLevel++;
@@ -127,18 +146,24 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         add(exitButton);
     }
 
+    /**
+     * X and Y locations of an orbit are calculated based off of the moon's
+     * current radiant in the circle. By using some basic radiant trigonomic functions
+     * we can figure out the xPostion/yPosition of the new location of the moon.
+     *
+     * The amount of radiants that each moon will move each time largly depends on the
+     * calculations from {calculateOrbitSpeedUsingOrbitLevel()}
+     */
     private void updateMoonPosition() {
-        moveCenterPlanet();
-
         int orbitLevel = 1;
         List<double[]> updatedMoonInformation = new ArrayList<double[]>();
         for (double[] moonInfo : moonInformation) {
             double radius = moonInfo[0];
-            double orbitVelocity = (calculateOrbitSpeedUsingOrbitLevel(orbitLevel) / (100 / delay)) * simulationMultiplier;
-            double newRadiant = moonInfo[3] + orbitVelocity;
+            double moonOrbitVelocity = (calculateOrbitSpeedUsingOrbitLevel(orbitLevel) / (100 / delay)) * simulationMultiplier;
+            double newRadiant = moonInfo[3] + moonOrbitVelocity;
             double hypotenius = (orbitLevel * ORBIT_SEPARATION) + currentPlanet.getRadius();
-            double newXPosition = transformToCenter(Math.cos(newRadiant) * hypotenius, 0);
-            double newYposition = transformToCenter(Math.sin(newRadiant) * hypotenius, 1);
+            double newXPosition = transformToCenter(Math.cos(newRadiant) * hypotenius, CoordinateDirection.x);
+            double newYposition = transformToCenter(Math.sin(newRadiant) * hypotenius, CoordinateDirection.y);
             double[] moonData = new double[] { radius, newXPosition, newYposition, newRadiant };
             updatedMoonInformation.add(moonData);
             orbitLevel++;
@@ -150,16 +175,30 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         return (4 / 3) * Math.PI * Math.pow(radius, 3);
     }
 
+    /**
+     * Orbit speeds are largely calculated depending on the orbitLevel of the moon and the
+     * minimum orbitalVelocity that the planet requires. A reciprocal function of 1/.5x + 1
+     * is used to offset the different orbitVelocities depending on their orbitlevel(x).
+     * @param orbitLevel
+     * @return {double}
+     */
     private double calculateOrbitSpeedUsingOrbitLevel(int orbitLevel) {
         return orbitalVelocity * (1 / (.5 * orbitLevel) + 1);
     }
 
-    private double transformToCenter(double coordinate, int direction) {
-        if (direction == 0) {
+    /**
+     * transform regular coordinate values to coordinates relating to the center
+     * of the panel. This allows for objects to be centered instead of starting
+     * from the top-left side of the screen.
+     * @param coordinate
+     * @param direction
+     * @return
+     */
+    private double transformToCenter(double coordinate, CoordinateDirection direction) {
+        if (direction == CoordinateDirection.x) {
             return coordinate + (panelWidth / 2);
-        } else {
-            return coordinate + (panelHeight / 2);
         }
+        return coordinate + (panelHeight / 2);
     }
 
     private double distanceFromMouseToPlanet(int mouseX, int mouseY) {
@@ -168,6 +207,10 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         return Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
     }
 
+    /**
+     * Main paint component that is called every time a repaint() method is called or
+     * when another event occures.
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -228,10 +271,9 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
     public void mouseMoved(MouseEvent e) {
         int mouseX = e.getX();
         int mouseY = e.getY();
+        isHoveringOverPlanet = false;
         if(distanceFromMouseToPlanet(mouseX, mouseY) <= currentPlanet.getRadius()) {
             isHoveringOverPlanet = true;
-        } else {
-            isHoveringOverPlanet = false;
         }
     }
 
@@ -242,25 +284,26 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if(isHoveringOverPlanet) {
-            mainFrame.getLandSimulation().openLandSimulation(currentPlanet.getPlanetSeed());
-            mainFrame.getLandSimulation().requestFocus();
-            setVisible(false);
-        }
+        if(!isHoveringOverPlanet) { return; }
+
+        mainFrame.getLandSimulation().openLandSimulation(currentPlanet.getPlanetSeed());
+        mainFrame.getLandSimulation().requestFocus();
+        setVisible(false);
+
      }
 
     @Override
-    public void mousePressed(MouseEvent e) {}
+    public void mousePressed(MouseEvent e) { }
 
     @Override
-    public void mouseReleased(MouseEvent e) {}
+    public void mouseReleased(MouseEvent e) { }
 
     @Override
-    public void mouseEntered(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) { }
 
     @Override
-    public void mouseExited(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) { }
 
     @Override
-    public void mouseDragged(MouseEvent e) {}
+    public void mouseDragged(MouseEvent e) { }
 }

@@ -16,31 +16,35 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Main space environment which generates, draws and allows users to interact
+ * with planet regions and the planets that are inside it. Users are also able
+ * to select planets and begin simulations of the planet.
+ */
 public class EnviroPanel extends JPanel implements KeyListener, MouseInputListener {
 
-    /**
-     *
-     */
+
     private static final long serialVersionUID = 1L;
     SpaceFrame mainFrame;
     Random universeSeedGenerator;
-    int enviroHeight;
-    int enviroWidth;
+    int environmentHeight;
+    int environmentWidth;
 
+    int regionHeight;
+    int regionWidth;
     int moveSpeed = 20;
     int[] spacePosition = { 0, 0 }; // (x,y)
-    int[] regionLocation = { 0, 0 }; // (x,y)
-    int maxPlanets = 20;
-    int minPlanets = 10;
 
     Hashtable<String, Integer> allSpaceRegions = new Hashtable<String, Integer>();
     List<PlanetRegion> spaceRegionsToLoad = new ArrayList<PlanetRegion>();
     PlanetRegion centerRegion = null;
+    int maxPlanets = 20;
+    int minPlanets = 10;
 
     Planet planetHovering;
     boolean isSimulatingPlanet = false;
 
-    public EnviroPanel(SpaceFrame mainFrame, int height, int width) {
+    public EnviroPanel(SpaceFrame mainPanel, int height, int width) {
         setOpaque(true);
         setBackground(Color.BLACK);
         setBounds(0, 0, width, height);
@@ -50,84 +54,51 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         addMouseMotionListener(this);
         setFocusable(true);
 
-        this.mainFrame = mainFrame;
-        this.enviroHeight = height;
-        this.enviroWidth = width;
+        mainFrame = mainPanel;
+        environmentHeight = height;
+        environmentWidth = width;
+        regionHeight = height;
+        regionWidth = width;
 
-        createInitialRegion();
-
-        updateCenterRegion();
-        updateRegionsToLoad();
+        updateListOfRegionsToLoad();
     }
 
     public void updateVisibleSpaceSize(int width, int height) {
         setBounds(0, 0, width, height);
+        environmentHeight = height;
+        environmentWidth = width;
         repaint();
     }
 
-    private void createInitialRegion() {
-        PlanetRegion initialRegion = new PlanetRegion(createSeed(), 0, 0, enviroHeight, enviroWidth);
-        spaceRegionsToLoad.add(initialRegion);
-        String locationCoord = putIntegersTogetherAsString(initialRegion.getXRegion(), initialRegion.getYRegion());
-        allSpaceRegions.put(locationCoord, initialRegion.getRegionSeed());
-    }
-
-    private void updateCenterRegion() {
-        int xVal = Math.abs(spacePosition[0]);
-        int yVal = Math.abs(spacePosition[1]);
-        int xSign = (spacePosition[0] < 0) ? -1 : 1;
-        int ySign = (spacePosition[1] < 0) ? -1 : 1;
-
-        int xRegionLoc = (xVal / enviroWidth) * xSign;
-        int yRegionLoc = (yVal / enviroHeight) * ySign;
-        regionLocation[0] = xRegionLoc;
-        regionLocation[1] = yRegionLoc;
-    }
-
-    private void updateRegionsToLoad() {
+    /**
+     * Uses the spacePosition, environment size and the region sizes to
+     * calculate the regions that are visible to the user. Regions that are
+     * visible to the users will be added to the {spaceRegionsToLoad}.
+     *
+     * New regions that have not been viewed before, will be added to the allSpaceRegions
+     * hashtable for future reference.
+     */
+    private void updateListOfRegionsToLoad() {
         spaceRegionsToLoad.clear();
-        int screenWidth = mainFrame.getWidth();
-        int screenHeight = mainFrame.getHeight();
 
-        int startXRegion = Math.floorDiv(spacePosition[0], enviroWidth);
-        int startYRegion = Math.floorDiv(spacePosition[1], enviroHeight);
-        int endXRegion = Math.floorDiv(spacePosition[0] + screenWidth, enviroWidth);
-        int endYRegion = Math.floorDiv(spacePosition[1] + screenHeight, enviroHeight);
+        int startXRegion = calculateRegionIndexFromCoordinateAndSize(spacePosition[0], regionWidth);
+        int startYRegion = calculateRegionIndexFromCoordinateAndSize(spacePosition[1], regionHeight);
+        int endXRegion = calculateRegionIndexFromCoordinateAndSize(spacePosition[0] + environmentWidth, regionWidth);
+        int endYRegion = calculateRegionIndexFromCoordinateAndSize(spacePosition[1] + environmentHeight, regionHeight);
         for(int xRegion = startXRegion; xRegion <= endXRegion; xRegion++) {
             for(int yRegion = startYRegion; yRegion <= endYRegion; yRegion++) {
-                String regionLocation = putIntegersTogetherAsString(xRegion, yRegion);
-                if(allSpaceRegions.get(regionLocation) == null) {
-                    allSpaceRegions.put(regionLocation, createSeed());
+                String regionKeyIndex = createRegionKeyIndex(xRegion, yRegion);
+                if(allSpaceRegions.get(regionKeyIndex) == null) {
+                    allSpaceRegions.put(regionKeyIndex, createSeed());
                 }
-                PlanetRegion regionToAdd = new PlanetRegion(allSpaceRegions.get(regionLocation), xRegion, yRegion, enviroHeight, enviroWidth);
+                PlanetRegion regionToAdd = new PlanetRegion(allSpaceRegions.get(regionKeyIndex), xRegion, yRegion, regionHeight, regionWidth);
                 spaceRegionsToLoad.add(regionToAdd);
             }
         }
     }
 
-    private PlanetRegion findPlanetRegionFromCoordinates(int mouseX, int mouseY) {
-        int xRegion = Math.floorDiv(mouseX, enviroWidth);
-        int yRegion = Math.floorDiv(mouseY, enviroHeight);
-        for(PlanetRegion region: spaceRegionsToLoad) {
-            if(region.getXRegion() == xRegion && region.getYRegion() == yRegion) {
-                return region;
-            }
-        }
-        return null;
-    }
 
-    private int createSeed() {
-        return (int) (Math.random() * 1000000);
-    }
-
-    private int transformToScreenspace(int original, int offset) {
-        return original - offset;
-    }
-
-    private String putIntegersTogetherAsString(int a, int b) {
-        return Integer.toString(a) + Integer.toString(b);
-    }
-
+    //Main paint component that is called every time repaint() is called and when an event occures.
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -155,16 +126,16 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     private void drawStarsInRegion(PlanetRegion region, Graphics g) {
         for(int[] starInfo: region.getStars()) {
             g.setColor(Color.white);
-            int starTransformX = transformToScreenspace(starInfo[0], spacePosition[0]);
-            int starTransformY = transformToScreenspace(starInfo[1], spacePosition[1]);
-            g.fillArc(starTransformX, starTransformY, starInfo[2], starInfo[2], 0, 360);
+            int starLocationX = transformToScreenspace(starInfo[0], spacePosition[0]);
+            int starLocationY = transformToScreenspace(starInfo[1], spacePosition[1]);
+            g.fillArc(starLocationX, starLocationY, starInfo[2], starInfo[2], 0, 360);
         }
     }
 
     private void drawPlanetsInRegion(PlanetRegion region, Graphics g) {
         for (Planet planet : region.getListOfPlanets()) {
-            Color pColour = planet.getPlanetColour();
-            g.setColor(pColour);
+            Color planetColor = planet.getPlanetColour();
+            g.setColor(planetColor);
             int xTransformed = transformToScreenspace(planet.getXCoordinate(), spacePosition[0]);
             int yTransformed = transformToScreenspace(planet.getYCoordinate(), spacePosition[1]);
             g.fillArc(xTransformed, yTransformed, planet.getRadius() * 2, planet.getRadius() * 2, 0, 360);
@@ -173,6 +144,48 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
 
     public void setIsSimulatingBoolean(boolean change) {
         isSimulatingPlanet = change;
+    }
+
+    private int calculateRegionIndexFromCoordinateAndSize(int coordinate, int size) {
+        return Math.floorDiv(coordinate, size);
+    }
+
+    private int createSeed() {
+        return (int) (Math.random() * 1000000);
+    }
+
+    /**
+     * Takes original coordinates and offsets it according to the world position.
+     * Accounting for the current location that the user is in.
+     * @param original
+     * @param offset
+     * @return {int}
+     */
+    private int transformToScreenspace(int original, int offset) {
+        return original - offset;
+    }
+
+    
+    /**
+     * Combines both regionX and regionY together and returns it as a
+     * region key for the allSpaceRegions HashTable.
+     * @param regionX
+     * @param regionY
+     * @return {String}
+     */
+    private String createRegionKeyIndex(int regionX, int regionY) {
+        return Integer.toString(regionX) + Integer.toString(regionY);
+    }
+
+    private PlanetRegion findPlanetRegionFromCoordinates(int mouseX, int mouseY) {
+        int xRegion = calculateRegionIndexFromCoordinateAndSize(mouseX, regionWidth);
+        int yRegion = calculateRegionIndexFromCoordinateAndSize(mouseY, regionHeight);
+        for(PlanetRegion region: spaceRegionsToLoad) {
+            if(region.getXRegion() == xRegion && region.getYRegion() == yRegion) {
+                return region;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -195,8 +208,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
                 break;
         }
 
-        updateCenterRegion();
-        updateRegionsToLoad();
+        updateListOfRegionsToLoad();
         repaint();
     }
 

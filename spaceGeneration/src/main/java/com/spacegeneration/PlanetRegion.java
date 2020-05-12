@@ -5,6 +5,12 @@ import java.util.Random;
 import java.util.List;
 import java.util.ArrayList;
 import java.awt.Color;
+
+/**
+ * PlanetRegion class contains most of the information about thre region, such as the
+ * number of planets, the region location, stars, etc. All of the planetRegion information
+ * is based off the assigned seed number.
+ */
 public class PlanetRegion {
 
     private int maxPlanets = 20;
@@ -15,7 +21,7 @@ public class PlanetRegion {
     private int spaceHeight;
     private int seedRange = 100000;
 
-    Random seed;
+    private Random seed;
     private int regionSeed;
     private int totalPlanets;
 
@@ -24,10 +30,15 @@ public class PlanetRegion {
 
     List<Planet> listOfPlanetObject = new ArrayList<Planet>();
     int[][] starLocation;
+
+    enum CoordinateType {
+        x, y
+    }
+
     public PlanetRegion(int seed, int xLoc, int yLoc, int height, int width) {
         this.regionSeed = seed;
-        this.totalPlanets = new Random(this.regionSeed).nextInt(maxPlanets) + minPlanets;
         this.seed = new Random(this.regionSeed);
+        this.totalPlanets = this.seed.nextInt(maxPlanets) + minPlanets;
         this.xRegion = xLoc;
         this.yRegion = yLoc;
         this.spaceHeight = height;
@@ -67,12 +78,7 @@ public class PlanetRegion {
     }
 
     private void addPlanetToSortedxCoordinateList(Planet planet) {
-        if(listOfPlanetObject.size() == 0) {
-            listOfPlanetObject.add(planet);
-        }
-
-        int planetListLength = listOfPlanetObject.size();
-        for(int index = 0; index < planetListLength; index++) {
+        for(int index = 0; index < listOfPlanetObject.size(); index++) {
             if(listOfPlanetObject.get(index).getXCoordinate() > planet.getXCoordinate()) {
                 listOfPlanetObject.add(index, planet);
                 return;
@@ -81,15 +87,25 @@ public class PlanetRegion {
         listOfPlanetObject.add(planet);
     }
 
+    /**
+     * Recurrsive quicksort method that searches through the sorted list of planets
+     * by starting in the middle and pivoting either left or right depending if the
+     * planetToCheck's xCoordinate is larger or smaller.
+     *
+     * @param planetToCheck
+     * @param min
+     * @param max
+     * @return
+     */
     private boolean isPlanetOverlappingAnother(Planet planetToCheck, int min, int max) {
         if(listOfPlanetObject.size() == 0) { return false; }
 
         int midIndex = (min + max) / 2;
         Planet midPlanet = listOfPlanetObject.get(midIndex);
-        int midPlanetX = offSetPlanetCoordinateByRadius(midPlanet, 0);
-        int midPlanetY = offSetPlanetCoordinateByRadius(midPlanet, 1);
-        int planetToCheckX = offSetPlanetCoordinateByRadius(planetToCheck, 0);
-        int planetToCheckY = offSetPlanetCoordinateByRadius(planetToCheck, 1);
+        int midPlanetX = offSetPlanetCoordinateByRadius(midPlanet, CoordinateType.x);
+        int midPlanetY = offSetPlanetCoordinateByRadius(midPlanet, CoordinateType.y);
+        int planetToCheckX = offSetPlanetCoordinateByRadius(planetToCheck, CoordinateType.x);
+        int planetToCheckY = offSetPlanetCoordinateByRadius(planetToCheck, CoordinateType.y);
         double distanceBetweenPlanets = calculateDistanceOfTwoObjects(midPlanetX, midPlanetY, planetToCheckX, planetToCheckY);
         if(distanceBetweenPlanets < midPlanet.getRadius() * 2|| distanceBetweenPlanets < planetToCheck.getRadius() * 2) {
             return true;
@@ -102,11 +118,23 @@ public class PlanetRegion {
         }
     }
 
+    private int offSetPlanetCoordinateByRadius(Planet planet, CoordinateType whichCoordinate) {
+        int originalCoordinate = (whichCoordinate == CoordinateType.x)? planet.getXCoordinate():planet.getYCoordinate();
+        return originalCoordinate + planet.getRadius();
+    }
+
+    private double calculateDistanceOfTwoObjects(int x1, int y1, int x2, int y2) {
+        double xDistance = x2 - x1;
+        double yDistance = y2 - y1;
+        double totalDistance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+        return totalDistance;
+    }
+
     public Planet findPlanetByLocation(int selectX, int selectY) {
         for(int j = 0; j < listOfPlanetObject.size(); j++) {
             Planet jPlanet = listOfPlanetObject.get(j);
-            int planetXCoord = offSetPlanetCoordinateByRadius(jPlanet, 0);
-            int planetyCoord = offSetPlanetCoordinateByRadius(jPlanet, 1);
+            int planetXCoord = offSetPlanetCoordinateByRadius(jPlanet, CoordinateType.x);
+            int planetyCoord = offSetPlanetCoordinateByRadius(jPlanet, CoordinateType.y);
             double distanceBetweenTwoPoints = calculateDistanceOfTwoObjects(planetXCoord, planetyCoord, selectX, selectY);
             if(distanceBetweenTwoPoints < jPlanet.getRadius()) {
                 return jPlanet;
@@ -114,17 +142,6 @@ public class PlanetRegion {
             if(planetXCoord > selectX) { break; }
         }
         return null;
-    }
-
-    private int offSetPlanetCoordinateByRadius(Planet planet, int whichCoordinateDirection) {
-        int originalCoordinate = (whichCoordinateDirection == 0)? planet.getXCoordinate():planet.getYCoordinate();
-        return originalCoordinate + planet.getRadius();
-    }
-    private double calculateDistanceOfTwoObjects(int x1, int y1, int x2, int y2) {
-        double xDistance = x2 - x1;
-        double yDistance = y2 - y1;
-        double totalDistance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
-        return totalDistance;
     }
 
     public int[][] getStars() {

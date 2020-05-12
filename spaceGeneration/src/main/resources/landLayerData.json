@@ -26,7 +26,7 @@
     {
         "landTypeName": "Snowy",
         "landTypeInformation": {
-            "layerValues": [ 0.20, 0.35, 0.63, 0.74, 1.0 ],
+            "layerValues": [ 0.20, 0.35, 0.63, 0.87, 1.0 ],
             "landColors": [  "#86d6d8", "#A5F2F3",
                 "#ffffff", "#4b4036", "#ffffff" ]
         }

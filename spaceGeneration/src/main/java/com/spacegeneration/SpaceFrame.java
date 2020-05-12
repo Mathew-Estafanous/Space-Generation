@@ -33,6 +33,7 @@ public class SpaceFrame extends JFrame implements ComponentListener {
         infoPanel = new PlanetInfoPanel(frameWidth, frameHeight);
         orbitSimulationPanel = new OrbitSimulationPanel(frameWidth, frameHeight, this);
         landSimulationPanel = new PlanetLandSimulationPanel(frameWidth, frameHeight, this);
+
         layeredPane.add(enviroPanel, JLayeredPane.DEFAULT_LAYER);
         layeredPane.add(infoPanel, JLayeredPane.POPUP_LAYER);
         layeredPane.add(orbitSimulationPanel, JLayeredPane.POPUP_LAYER);
