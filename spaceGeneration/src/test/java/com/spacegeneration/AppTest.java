@@ -24,7 +24,7 @@ public class AppTest {
     @Test
     public void testSortedPlanetList() {
         PlanetRegion region = new PlanetRegion(4324, 0, 0, 800, 800);
-        assertThat(region.listOfPlanetObject, xCoordinatesInIncreasingOrder());
+        assertThat(region.getListOfPlanets(), xCoordinatesInIncreasingOrder());
     }
 
     private Matcher<? super List<Planet>> xCoordinatesInIncreasingOrder()

@@ -31,7 +31,7 @@ import org.json.simple.parser.ParseException;
 public class PlanetLandSimulationPanel extends JPanel implements KeyListener, ActionListener {
     private static final long serialVersionUID = 1L;
 
-    SpaceFrame mainFrame;
+    MainFrame mainFrame;
     int landWidth;
     int landHeight;
     int landSeed;
@@ -49,10 +49,9 @@ public class PlanetLandSimulationPanel extends JPanel implements KeyListener, Ac
     JSONParser jsonParser;
     final String FILE_DIRECTORY = "/landLayerData.json";
 
-    boolean isCurrentlySimulating = false;
     JButton closeSimulationBtn;
 
-    public PlanetLandSimulationPanel(int width, int height, SpaceFrame main) {
+    public PlanetLandSimulationPanel(int width, int height, MainFrame main) {
         this.landWidth = width;
         this.landHeight = height;
         this.mainFrame = main;
@@ -71,21 +70,18 @@ public class PlanetLandSimulationPanel extends JPanel implements KeyListener, Ac
         addKeyListener(this);
     }
 
-    public void openLandSimulation(int seed) {
-        isCurrentlySimulating = true;
+    public void openSimulation(int seed) {
         landSeed = seed;
         seedGenerator = new Random(seed);
 
-        setVisible(true);
         createPerlinNoise();
         parseJSONLayerData();
         repaint();
     }
 
     public void closeLandSimulation() {
-        setVisible(false);
-        isCurrentlySimulating = false;
-        mainFrame.getOrbitSimulationPanel().setVisible(true);
+        mainFrame.changeVisiblePanel(MainFrame.PanelTypes.orbitSimulation);
+        noiseLand = null;
     }
 
     public void updateLandSize(int width, int height) {

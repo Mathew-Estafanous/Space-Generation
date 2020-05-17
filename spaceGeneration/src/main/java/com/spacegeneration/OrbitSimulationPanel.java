@@ -32,7 +32,7 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
     final double DENSITY_OF_OBJECTS = 2000; // kg/m^2
     final int ORBIT_SEPARATION = 50;
 
-    private SpaceFrame mainFrame;
+    private MainFrame mainFrame;
     private int panelWidth;
     private int panelHeight;
 
@@ -52,11 +52,11 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
     private JSlider multiplierSlider;
     private JButton exitButton;
 
-    enum CoordinateDirection {
+    private enum CoordinateDirection {
         x,y
     }
 
-    public OrbitSimulationPanel(int width, int height, SpaceFrame main) {
+    public OrbitSimulationPanel(int width, int height, MainFrame main) {
         setOpaque(true);
         setBackground(Color.BLACK);
         setBounds(0, 0, width, height);
@@ -72,23 +72,21 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         addMouseMotionListener(this);
     }
 
-    public void openSimulation(Planet planetToSimulate) {
+    public void openOrbitSimulation(Planet planetToSimulate) {
         currentPlanet = planetToSimulate;
 
         timer.start();
         instantiateAllMoonsInOrbit();
         calculateMinimumOrbitVelocity();
         moveCenterPlanet();
-        setVisible(true);
     }
 
-    public void closeSimulation() {
+    public void closeOrbitSimulation() {
         timer.stop();
         timer.restart();
+        multiplierSlider.setValue(1);
         moonInformation.clear();
-        mainFrame.getEnviroPanel().setIsSimulatingBoolean(false);
-        mainFrame.getEnviroPanel().requestFocus();
-        setVisible(false);
+        mainFrame.changeVisiblePanel(MainFrame.PanelTypes.mainEnvironment);
     }
 
     public void updateSize(int width, int height) {
@@ -263,7 +261,7 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         }
 
         if (action == exitButton.getText()){
-            closeSimulation();
+            closeOrbitSimulation();
         }
     }
 
@@ -285,11 +283,7 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
     @Override
     public void mouseClicked(MouseEvent e) {
         if(!isHoveringOverPlanet) { return; }
-
-        mainFrame.getLandSimulation().openLandSimulation(currentPlanet.getPlanetSeed());
-        mainFrame.getLandSimulation().requestFocus();
-        setVisible(false);
-
+        mainFrame.openSimulation(currentPlanet.getPlanetSeed());
      }
 
     @Override

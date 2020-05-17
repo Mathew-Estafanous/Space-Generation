@@ -14,7 +14,6 @@ import javax.swing.event.MouseInputListener;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Main space environment which generates, draws and allows users to interact
@@ -25,26 +24,21 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
 
 
     private static final long serialVersionUID = 1L;
-    SpaceFrame mainFrame;
-    Random universeSeedGenerator;
-    int environmentHeight;
-    int environmentWidth;
+    private MainFrame mainFrame;
+    private int environmentHeight;
+    private int environmentWidth;
 
-    int regionHeight;
-    int regionWidth;
-    int moveSpeed = 20;
-    int[] spacePosition = { 0, 0 }; // (x,y)
+    private int regionHeight;
+    private int regionWidth;
+    private int moveSpeed = 20;
+    private int[] spacePosition = { 0, 0 };
 
-    Hashtable<String, Integer> allSpaceRegions = new Hashtable<String, Integer>();
-    List<PlanetRegion> spaceRegionsToLoad = new ArrayList<PlanetRegion>();
-    PlanetRegion centerRegion = null;
-    int maxPlanets = 20;
-    int minPlanets = 10;
+    private Hashtable<String, Integer> allSpaceRegions = new Hashtable<String, Integer>();
+    private List<PlanetRegion> spaceRegionsToLoad = new ArrayList<PlanetRegion>();
 
-    Planet planetHovering;
-    boolean isSimulatingPlanet = false;
+    private Planet planetHovering;
 
-    public EnviroPanel(SpaceFrame mainPanel, int height, int width) {
+    public EnviroPanel(int width, int height, MainFrame mainPanel) {
         setOpaque(true);
         setBackground(Color.BLACK);
         setBounds(0, 0, width, height);
@@ -118,9 +112,11 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
 
     private void drawHoveringOutline(Graphics g) {
         g.setColor(Color.CYAN);
-        int xTransform = transformToScreenspace(planetHovering.getXCoordinate(), spacePosition[0]);
-        int yTransform = transformToScreenspace(planetHovering.getYCoordinate(), spacePosition[1]);
-        g.drawArc(xTransform - 5, yTransform - 5, (planetHovering.getRadius() * 2) + 10, (planetHovering.getRadius() * 2) + 10, 0, 360);
+        int outlineSize = (int) Math.round((planetHovering.getRadius() * 2) * 1.2);
+        int offSetTransform = (outlineSize - planetHovering.getRadius() * 2)/2;
+        int xTransform = transformToScreenspace(planetHovering.getXCoordinate(), spacePosition[0]) - offSetTransform;
+        int yTransform = transformToScreenspace(planetHovering.getYCoordinate(), spacePosition[1]) - offSetTransform;
+        g.drawArc(xTransform, yTransform, outlineSize, outlineSize, 0, 360);
     }
 
     private void drawStarsInRegion(PlanetRegion region, Graphics g) {
@@ -142,10 +138,15 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         }
     }
 
-    public void setIsSimulatingBoolean(boolean change) {
-        isSimulatingPlanet = change;
-    }
-
+    /**
+     * Takes a certain coordinate and a size (width or length), then divides the
+     * coordinate by the size and floors it to an integer value. This will get an
+     * index value relating to the region that coordinate is in.
+     *
+     * @param coordinate
+     * @param size
+     * @return {int}
+     */
     private int calculateRegionIndexFromCoordinateAndSize(int coordinate, int size) {
         return Math.floorDiv(coordinate, size);
     }
@@ -155,8 +156,9 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     }
 
     /**
-     * Takes original coordinates and offsets it according to the world position.
+     * Takes original coordinate and offset it according to the world position.
      * Accounting for the current location that the user is in.
+     *
      * @param original
      * @param offset
      * @return {int}
@@ -169,6 +171,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     /**
      * Combines both regionX and regionY together and returns it as a
      * region key for the allSpaceRegions HashTable.
+     *
      * @param regionX
      * @param regionY
      * @return {String}
@@ -190,8 +193,6 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if(isSimulatingPlanet) { return; }
-
         char currentKey = e.getKeyChar();
         switch(currentKey) {
             case 'w':
@@ -214,12 +215,10 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if(SwingUtilities.isLeftMouseButton(e)) {
-            OrbitSimulationPanel orbitSimulation = mainFrame.getOrbitSimulationPanel();
-            if(planetHovering != null && !isSimulatingPlanet) {
-                orbitSimulation.openSimulation(planetHovering);
-                isSimulatingPlanet = true;
-            }
+        if(!SwingUtilities.isLeftMouseButton(e)) { return; }
+
+        if(planetHovering != null) {
+            mainFrame.openSimulation(planetHovering);
         }
     }
 

@@ -19,7 +19,7 @@ public class PlanetRegion {
     private int minPlanetRadius= 5;
     private int spaceWidth;
     private int spaceHeight;
-    private int seedRange = 100000;
+    private int seedRange = 1000000;
 
     private Random seed;
     private int regionSeed;
@@ -28,10 +28,10 @@ public class PlanetRegion {
     private int xRegion;
     private int yRegion;
 
-    List<Planet> listOfPlanetObject = new ArrayList<Planet>();
-    int[][] starLocation;
+    private List<Planet> listOfPlanetObject = new ArrayList<Planet>();
+    private int[][] starLocation;
 
-    enum CoordinateType {
+    private enum CoordinateType {
         x, y
     }
 
