@@ -84,7 +84,7 @@ public class PlanetLandSimulationPanel extends JPanel implements KeyListener, Ac
         noiseLand = null;
     }
 
-    public void updateLandSize(int width, int height) {
+    public void updateSize(int width, int height) {
         this.landWidth = width;
         this.landHeight = height;
         setBounds(0, 0, width, height);
@@ -116,7 +116,7 @@ public class PlanetLandSimulationPanel extends JPanel implements KeyListener, Ac
      */
     private void parseJSONLayerData() {
         try {
-            InputStream in = this.getClass().getResourceAsStream("/landLayerData.json");
+            InputStream in = this.getClass().getResourceAsStream(FILE_DIRECTORY);
             InputStreamReader reader = new InputStreamReader(in);
             Object jsonObj = jsonParser.parse(reader);
             JSONArray landTypeList = (JSONArray) jsonObj;

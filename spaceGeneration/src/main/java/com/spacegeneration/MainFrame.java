@@ -11,15 +11,16 @@ public class MainFrame extends JFrame implements ComponentListener {
     private static final long serialVersionUID = 1L;
 
     private int frameHeight = 800;
-    private int frameWidth = 1000;
+    private int frameWidth = 800;
 
     private JLayeredPane layeredPane;
-    private EnviroPanel enviroPanel;
+    private StartScreenPanel startScreenPanel;
+    private UniversePanel universePanel;
     private OrbitSimulationPanel orbitSimulationPanel;
     private PlanetLandSimulationPanel landSimulationPanel;
 
     enum PanelTypes {
-        mainEnvironment, orbitSimulation, landSimulation
+        startScreen, spaceEnvironment, orbitSimulation, landSimulation
     }
 
     public MainFrame() {
@@ -30,26 +31,35 @@ public class MainFrame extends JFrame implements ComponentListener {
         setVisible(true);
 
         layeredPane = new JLayeredPane();
-        enviroPanel = new EnviroPanel(frameWidth, frameHeight, this);
+        startScreenPanel = new StartScreenPanel(frameWidth, frameHeight, this);
+        universePanel = new UniversePanel(frameWidth, frameHeight, this);
         orbitSimulationPanel = new OrbitSimulationPanel(frameWidth, frameHeight, this);
         landSimulationPanel = new PlanetLandSimulationPanel(frameWidth, frameHeight, this);
 
-        layeredPane.add(enviroPanel, JLayeredPane.DEFAULT_LAYER);
+        layeredPane.add(startScreenPanel, JLayeredPane.DEFAULT_LAYER);
+        layeredPane.add(universePanel, JLayeredPane.POPUP_LAYER);
         layeredPane.add(orbitSimulationPanel, JLayeredPane.POPUP_LAYER);
         layeredPane.add(landSimulationPanel, JLayeredPane.POPUP_LAYER);
 
         addComponentListener(this);
         add(layeredPane);
+        changeVisiblePanel(PanelTypes.startScreen);
     }
 
     public void changeVisiblePanel(PanelTypes frontPanel) {
         switch(frontPanel) {
-            case mainEnvironment:
+            case startScreen:
+                universePanel.setVisible(false);
+                startScreenPanel.requestFocus();
+                break;
+            case spaceEnvironment:
                 orbitSimulationPanel.setVisible(false);
-                enviroPanel.requestFocus();
+                universePanel.setVisible(true);
+                universePanel.requestFocus();
                 break;
             case orbitSimulation:
                 landSimulationPanel.setVisible(false);
+                universePanel.setVisible(false);
                 orbitSimulationPanel.setVisible(true);
                 orbitSimulationPanel.requestFocus();
                 break;
@@ -62,10 +72,19 @@ public class MainFrame extends JFrame implements ComponentListener {
     }
 
     /**
+     * Start the Space universe simulation.
+     * @param universeSeed
+     */
+    public void startUniverseSimulation(int universeSeed) {
+        changeVisiblePanel(PanelTypes.spaceEnvironment);
+        universePanel.startUniverseSimulation(universeSeed);
+    }
+
+    /**
      * Open Planet Orbit simulation
      * @param planetToSimulate
      */
-    public void openSimulation(Planet planetToSimulate) {
+    public void openOrbitSimulation(Planet planetToSimulate) {
         changeVisiblePanel(PanelTypes.orbitSimulation);
         orbitSimulationPanel.openOrbitSimulation(planetToSimulate);
     }
@@ -74,7 +93,7 @@ public class MainFrame extends JFrame implements ComponentListener {
      * Open Planet Land Simulation
      * @param planetSeed
      */
-    public void openSimulation(int planetSeed) {
+    public void openLandSimualtion(int planetSeed) {
         changeVisiblePanel(PanelTypes.landSimulation);
         landSimulationPanel.openSimulation(planetSeed);
     }
@@ -83,9 +102,10 @@ public class MainFrame extends JFrame implements ComponentListener {
     public void componentResized(ComponentEvent e) {
         this.frameHeight = getHeight();
         this.frameWidth = getWidth();
-        enviroPanel.updateVisibleSpaceSize(this.frameWidth, this.frameHeight);
+        startScreenPanel.updateSize(this.frameWidth, this.frameHeight);
+        universePanel.updateSize(this.frameWidth, this.frameHeight);
         orbitSimulationPanel.updateSize(this.frameWidth, this.frameHeight);
-        landSimulationPanel.updateLandSize(this.frameWidth, this.frameHeight);
+        landSimulationPanel.updateSize(this.frameWidth, this.frameHeight);
     }
 
     @Override

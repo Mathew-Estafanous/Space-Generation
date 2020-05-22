@@ -14,13 +14,14 @@ import javax.swing.event.MouseInputListener;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Main space environment which generates, draws and allows users to interact
  * with planet regions and the planets that are inside it. Users are also able
  * to select planets and begin simulations of the planet.
  */
-public class EnviroPanel extends JPanel implements KeyListener, MouseInputListener {
+public class UniversePanel extends JPanel implements KeyListener, MouseInputListener {
 
 
     private static final long serialVersionUID = 1L;
@@ -31,14 +32,15 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     private int regionHeight;
     private int regionWidth;
     private int moveSpeed = 20;
-    private int[] spacePosition = { 0, 0 };
+    private int[] spacePosition = { 0, 0 };  //(x, y)
 
     private Hashtable<String, Integer> allSpaceRegions = new Hashtable<String, Integer>();
     private List<PlanetRegion> spaceRegionsToLoad = new ArrayList<PlanetRegion>();
 
     private Planet planetHovering;
+    private int universeSeed;
 
-    public EnviroPanel(int width, int height, MainFrame mainPanel) {
+    public UniversePanel(int width, int height, MainFrame mainPanel) {
         setOpaque(true);
         setBackground(Color.BLACK);
         setBounds(0, 0, width, height);
@@ -53,11 +55,14 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         environmentWidth = width;
         regionHeight = height;
         regionWidth = width;
+    }
 
+    public void startUniverseSimulation(int seedForUniverse) {
+        universeSeed = seedForUniverse;
         updateListOfRegionsToLoad();
     }
 
-    public void updateVisibleSpaceSize(int width, int height) {
+    public void updateSize(int width, int height) {
         setBounds(0, 0, width, height);
         environmentHeight = height;
         environmentWidth = width;
@@ -68,7 +73,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
      * Uses the spacePosition, environment size and the region sizes to
      * calculate the regions that are visible to the user. Regions that are
      * visible to the users will be added to the {spaceRegionsToLoad}.
-     *
+     * <p>
      * New regions that have not been viewed before, will be added to the allSpaceRegions
      * hashtable for future reference.
      */
@@ -83,7 +88,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
             for(int yRegion = startYRegion; yRegion <= endYRegion; yRegion++) {
                 String regionKeyIndex = createRegionKeyIndex(xRegion, yRegion);
                 if(allSpaceRegions.get(regionKeyIndex) == null) {
-                    allSpaceRegions.put(regionKeyIndex, createSeed());
+                    allSpaceRegions.put(regionKeyIndex, createSeed(regionKeyIndex));
                 }
                 PlanetRegion regionToAdd = new PlanetRegion(allSpaceRegions.get(regionKeyIndex), xRegion, yRegion, regionHeight, regionWidth);
                 spaceRegionsToLoad.add(regionToAdd);
@@ -92,7 +97,6 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
     }
 
 
-    //Main paint component that is called every time repaint() is called and when an event occures.
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -145,14 +149,23 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
      *
      * @param coordinate
      * @param size
-     * @return {int}
+     * @return {int} Region Index
      */
     private int calculateRegionIndexFromCoordinateAndSize(int coordinate, int size) {
         return Math.floorDiv(coordinate, size);
     }
 
-    private int createSeed() {
-        return (int) (Math.random() * 1000000);
+    /**
+     * takes the region key and returns a specific region seed according to the
+     * region key's hashcode and the universe seed.
+     *
+     * @param regionKey
+     * @return {int} Region Seed
+     */
+    private int createSeed(String regionKey) {
+        int regionHashCode = regionKey.hashCode();
+        Random seedOfUniverse = new Random(universeSeed);
+        return seedOfUniverse.nextInt(regionHashCode);
     }
 
     /**
@@ -161,7 +174,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
      *
      * @param original
      * @param offset
-     * @return {int}
+     * @return {int} Transformed Coordinate
      */
     private int transformToScreenspace(int original, int offset) {
         return original - offset;
@@ -218,7 +231,7 @@ public class EnviroPanel extends JPanel implements KeyListener, MouseInputListen
         if(!SwingUtilities.isLeftMouseButton(e)) { return; }
 
         if(planetHovering != null) {
-            mainFrame.openSimulation(planetHovering);
+            mainFrame.openOrbitSimulation(planetHovering);
         }
     }
 
