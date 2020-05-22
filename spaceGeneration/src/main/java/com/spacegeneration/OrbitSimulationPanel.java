@@ -10,6 +10,9 @@ import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -18,6 +21,7 @@ import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
+
 
 /**
  * This panel is largely involved in simulating the orbits of moons for the
@@ -86,7 +90,7 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         timer.restart();
         multiplierSlider.setValue(1);
         moonInformation.clear();
-        mainFrame.changeVisiblePanel(MainFrame.PanelTypes.mainEnvironment);
+        mainFrame.changeVisiblePanel(MainFrame.PanelTypes.spaceEnvironment);
     }
 
     public void updateSize(int width, int height) {
@@ -127,6 +131,12 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
     }
 
     private void createUserInterface() {
+        setLayout(new GridBagLayout());
+        GridBagConstraints constraint = new GridBagConstraints();
+        constraint.weighty = 1.0;
+        constraint.anchor = GridBagConstraints.NORTH;
+        constraint.insets = new Insets(10, 0, 0, 0);
+
         multiplierSlider = new JSlider(minimumMultiplier, maximumMultiplier, simulationMultiplier);
         multiplierSlider.setMajorTickSpacing(2);
         multiplierSlider.setMinorTickSpacing(1);
@@ -136,19 +146,22 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         multiplierSlider.setBackground(Color.black);
         multiplierSlider.setForeground(Color.white);
         multiplierSlider.addChangeListener(this);
+        constraint.gridx = 0;
+        constraint.gridy = 0;
 
+        add(multiplierSlider, constraint);
         exitButton = new JButton("Leave Simulation");
         exitButton.addActionListener(this);
+        constraint.gridx = 1;
 
-        add(multiplierSlider);
-        add(exitButton);
+        add(exitButton, constraint);
     }
 
     /**
      * X and Y locations of an orbit are calculated based off of the moon's
      * current radiant in the circle. By using some basic radiant trigonomic functions
      * we can figure out the xPostion/yPosition of the new location of the moon.
-     *
+     *<p>
      * The amount of radiants that each moon will move each time largly depends on the
      * calculations from {calculateOrbitSpeedUsingOrbitLevel()}
      */
@@ -205,10 +218,6 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
         return Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
     }
 
-    /**
-     * Main paint component that is called every time a repaint() method is called or
-     * when another event occures.
-     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -283,7 +292,7 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
     @Override
     public void mouseClicked(MouseEvent e) {
         if(!isHoveringOverPlanet) { return; }
-        mainFrame.openSimulation(currentPlanet.getPlanetSeed());
+        mainFrame.openLandSimualtion(currentPlanet.getPlanetSeed());
      }
 
     @Override

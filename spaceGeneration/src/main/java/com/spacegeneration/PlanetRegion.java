@@ -52,8 +52,8 @@ public class PlanetRegion {
         int planetCount = 0;
         while(planetCount < totalPlanets) {
             int radius = seed.nextInt(maxPlanetRadius) + minPlanetRadius;
-            int xCoordinate = seed.nextInt(spaceWidth - 2 * radius) + (xRegion * spaceWidth);
-            int yCoordinate = seed.nextInt(spaceHeight - 2 * radius) + (yRegion * spaceHeight);
+            int xCoordinate = seed.nextInt(spaceWidth - (2 * radius)) + (xRegion * spaceWidth);
+            int yCoordinate = seed.nextInt(spaceHeight - (2 * radius)) + (yRegion * spaceHeight);
             Color planetColour = new Color(seed.nextInt(255), seed.nextInt(255), seed.nextInt(255));
             int planetSeed = seed.nextInt(seedRange);
             Planet newPlanet = new Planet(xCoordinate, yCoordinate, radius, planetColour, planetSeed, this);
@@ -166,5 +166,13 @@ public class PlanetRegion {
 
     public int getYRegion() {
         return yRegion;
+    }
+
+    public int getWidth() {
+        return spaceWidth;
+    }
+
+    public int getHeight() {
+        return spaceHeight;
     }
 }
