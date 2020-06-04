@@ -6,6 +6,15 @@ import java.awt.event.ComponentListener;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 
+/**
+ * Main JFrame in which all JPanels stem from. Actions that affect all
+ * the panels are initiated from here. Things like, switching the current
+ * panel, resize, starting a simulation.
+ * <p>
+ * Every panel should call the Main Frame when changing between visible panels or
+ * starting other simulations. Minimizing interaction between JPanels/other classes
+ * and ensuring actions go through the Main Frame instead.
+ */
 public class MainFrame extends JFrame implements ComponentListener {
 
     private static final long serialVersionUID = 1L;

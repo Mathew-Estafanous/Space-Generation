@@ -119,8 +119,9 @@ public class OrbitSimulationPanel extends JPanel implements ActionListener, Chan
      */
     private void instantiateAllMoonsInOrbit() {
         int orbitLevel = 1;
+        Random moonPositionGenerator = new Random(currentPlanet.getPlanetSeed());
         for (int radius : currentPlanet.getMoons()) {
-            double startingRadiant = Math.random() * Math.PI;
+            double startingRadiant = moonPositionGenerator.nextDouble() * Math.PI;
             double hypotenius = (orbitLevel * ORBIT_SEPARATION) + currentPlanet.getRadius();
             double startingX = transformToCenter(Math.cos(startingRadiant) * hypotenius, CoordinateDirection.x);
             double startingY = transformToCenter(Math.sin(startingRadiant) * hypotenius, CoordinateDirection.y);
