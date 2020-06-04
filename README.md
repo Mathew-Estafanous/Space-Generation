@@ -4,7 +4,7 @@
 
 # **Table Of Contents**
  * [Description](#description)
- * [Installation & Opening](#installation-&-opening)
+ * [Installation & Opening](#installation--opening)
  * [How To Use](#how-to-use)
  * [Technologies Used](#technologies-used)
  * [Contributors](#contributors)
