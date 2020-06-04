@@ -95,7 +95,7 @@ public class PlanetRegion {
      * @param planetToCheck
      * @param min
      * @param max
-     * @return
+     * @return {boolean}
      */
     private boolean isPlanetOverlappingAnother(Planet planetToCheck, int min, int max) {
         if(listOfPlanetObject.size() == 0) { return false; }

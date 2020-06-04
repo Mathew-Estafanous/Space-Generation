@@ -15,6 +15,11 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 
+/**
+ * Main Screen that is shown when the program is initially started. The screen
+ * is used to insert a seed, if the user chooses to do so. The user is then able
+ * to start the universe simulation.
+ */
 public class StartScreenPanel extends JPanel implements ActionListener {
     private static final long serialVersionUID = 1L;
 
@@ -25,7 +30,7 @@ public class StartScreenPanel extends JPanel implements ActionListener {
     private JLabel mainTitle;
     private String originalText = "Insert Seed (Optional)";
     private JTextField seedInputField;
-    private JButton startSpaceSimulation;
+    private JButton startSimulationBtn;
 
     int totalStars = 800;
     int[][] backgroundStars;
@@ -67,13 +72,13 @@ public class StartScreenPanel extends JPanel implements ActionListener {
         constraint.insets = new Insets(30, 0, 0, 0);
         add(seedInputField, constraint);
 
-        startSpaceSimulation = new JButton("Start Space Simulation");
-        startSpaceSimulation.addActionListener(this);
+        startSimulationBtn = new JButton("Start Space Simulation");
+        startSimulationBtn.addActionListener(this);
         constraint.gridy = 2;
         constraint.ipadx = 50;
         constraint.ipady = 30;
         constraint.insets = new Insets(30, 0, 0, 0);
-        add(startSpaceSimulation, constraint);
+        add(startSimulationBtn, constraint);
     }
 
     public void updateSize(int width, int height) {
@@ -95,6 +100,19 @@ public class StartScreenPanel extends JPanel implements ActionListener {
         }
     }
 
+    private void startSimulationWithSelectedSeed() {
+        int seedValue = 0;
+        if(seedInputField.getText().equals(originalText)) {
+            seedValue = (int) (Math.random() * 100000);
+        } else {
+            char[] characterArray = seedInputField.getText().toCharArray();
+            for(char character: characterArray) {
+                seedValue += character;
+            }
+        }
+        mainFrame.startUniverseSimulation(seedValue);
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -109,18 +127,8 @@ public class StartScreenPanel extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         String action = e.getActionCommand();
-        if(action != startSpaceSimulation.getText()) { return; }
+        if(action != startSimulationBtn.getText()) { return; }
 
-        int seedValue = 0;
-        if(seedInputField.getText().equals(originalText)) {
-            seedValue = (int) (Math.random() * 100000);
-        } else {
-            char[] characterArray = seedInputField.getText().toCharArray();
-            for(char character: characterArray) {
-                seedValue += character;
-            }
-        }
-        mainFrame.startUniverseSimulation(seedValue);
+        startSimulationWithSelectedSeed();
     }
-
 }
