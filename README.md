@@ -4,7 +4,7 @@
 
 # **Table Of Contents**
  * [Description](#description)
- * [Installation & Open](#installation-&-use)
+ * [Installation & Opening](#installation-&-opening)
  * [How To Use](#how-to-use)
  * [Technologies Used](#technologies-used)
  * [Contributors](#contributors)
@@ -40,19 +40,19 @@ If the steps given do not work, please contact me.
 # How To Use
 The application is fairly simple to use and easy to get the hang of quickly. When the application is initially loaded up, it will start with a simple main menu that has two main interactions. There is a section the user to input a universe seed (this is optional). If you do not input a seed then a random seed will be generated.
 
-[Main Menu](https://imgur.com/SlHDVun.png)
+![Main Menu](https://i.imgur.com/70Mz3uW.png)
 
 When you enter the universe simulation, you can WASD to move around the universe. All generated planets will remain exactly where they are generated, no matter how far you go. Memory usage is not high since the planets are deleted once you reach a certain distance.
 
-[Universe Simualtion](https://imgur.com/oBUkviR.png)
+![Universe Simualtion](https://i.imgur.com/qYC52r1.png)
 
 If you want to see a simulation of the moons orbiting a certain planet, you can click on the planet of your choice and the orbit simulation will begin. You can also speed up the orbit, up to 10x, by using the slider at the top of the panel.
 
-[Orbit Simulation](https://imgur.com/IbA7vKO.png)
+![Orbit Simulation](https://i.imgur.com/aE1akIM.png)
 
 If you would also like to see a simulation of the land formation of the planet, you can also click on the planet again to be taken to the land simulation of the planet. You cannot move in the land simulation as it is only a visual representation of the planet.
 
-[Land Simulation](https://imgur.com/undefined.png)
+![Land Simulation](https://i.imgur.com/4jrOmlS.png)
 
 # Technologies Used
 There is a wide variety of useful technologies that were available. These are just a few of the technologies that were used to make this project possible.
