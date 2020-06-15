@@ -22,10 +22,11 @@ This project was started after I had an interested in object procedural generati
 
 **Steps To Open:**
   * Go to the [Release](Release) folder
-  * Download the JAR file, in a location you can find.
-  * Try running the downloaded JAR file by running it as if it was a regular application. (Double-click)
+  * Download the .EXE file, in a location you can find.
+  * Try running the downloaded .EXE file by running it as if it was a regular application. (Double-click)
 
-**Steps If JAR file did not open:** (For Windows Users)
+**Steps If EXE file did not open:** (For Windows Users)
+  * Download the JAR file instead.
   * Find JAR file in folders
   * Copy directory of file
   (ie. C:\Users\mathe\Documents\Space-Generation\Release)
